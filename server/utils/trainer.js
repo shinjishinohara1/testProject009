@@ -2,9 +2,12 @@ import {
   ListObjectsCommand,
   PutObjectCommand,
   S3Client,
+  DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { ProxyAgent } from "proxy-agent";
+
 
 const config = useRuntimeConfig();
 
@@ -25,6 +28,31 @@ export const findTrainers = async () => {
 
 /** トレーナーの取得 */
 // TODO: トレーナーを取得する S3 クライアント処理の実装
+// 一旦お手本をコピー。ひとまずtrainer情報をつかって削除の実装を試す。
+const streamToString = (stream) =>
+  new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("error", reject);
+    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+  });
+
+export const findTrainer = async (name) => {
+  const object = await s3Client.send(
+    new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: `${name}.json`,
+    }),
+  );
+  const trainer = JSON.parse(await streamToString(object.Body));
+  return trainer;
+};
+
+
+
+
+
+
 
 /** トレーナーの追加更新 */
 export const upsertTrainer = async (name, trainer) => {
@@ -41,6 +69,7 @@ export const upsertTrainer = async (name, trainer) => {
 
 /** トレーナーの削除 */
 // ★TODO: トレーナーを削除する S3 クライアント処理の実装
+// ひとまず DeleteObjectCommand はImport
 export const delTrainer = async (name) => {
   const result = await s3Client.send(
     new DeleteObjectCommand({

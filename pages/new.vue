@@ -49,6 +49,7 @@ const confirmName = async () => {
       <button @click="confirmName">はい</button>
       <button @click="showDialog = false">いいえ</button>
     </div>
+    <NuxtLink to="/">戻る</NuxtLink>
   </div>
 </template>
 

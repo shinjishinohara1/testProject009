@@ -1,6 +1,16 @@
 import { Router } from "express";
-import { findTrainers, upsertTrainer } from "~/server/utils/trainer";
+// 足りないものをインポート追加
+import {
+  findTrainers,
+  findTrainer,
+  upsertTrainer,
+  delTrainer,
+ } from "~/server/utils/trainer";
 import { findPokemon } from "~/server/utils/pokemon";
+
+
+
+
 
 const router = Router();
 
@@ -13,13 +23,23 @@ router.get("/trainers", async (_req, res, next) => {
   try {
     const trainers = await findTrainers();
     // TODO: 期待するレスポンスボディに変更する
+    // .jsonを外さないと後々めんどくさそう。リンクとか作るのがきついので外す。
+    //const trainersName = trainers.Key.replace('.json', '')
+    //console.log(trainers)
+    //const trainerList = trainers.map(({ Key }) => Key.replace(".json", ""));
+    //console.log(trainerList)
+    //trainerListを渡すとトレーナー一覧が表示されない。なぜ？一応動くので一旦諦める。★後で調べて改修する。
     res.send(trainers);
+    //res.send(trainerList);
   } catch (err) {
     next(err);
   }
 });
 
+
+
 /** トレーナーの追加 */
+//どうにか完了。
 router.post("/trainer", async (req, res, next) => {
   try {
     // TODO: リクエストボディにトレーナー名が含まれていなければ400を返す
@@ -50,12 +70,26 @@ router.post("/trainer", async (req, res, next) => {
 
 /** トレーナーの取得 */
 // TODO: トレーナーを取得する API エンドポイントの実装
+router.get("/trainer/:trainerName", async (req, res, next) => {
+  try {
+    const { trainerName } = req.params;
+    const trainer = await findTrainer(trainerName);
+    res.send(trainer);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
 
 /** トレーナーの更新 */
 router.post("/trainer/:trainerName", async (req, res, next) => {
   try {
     const { trainerName } = req.params;
     // TODO: トレーナーが存在していなければ404を返す
+    if (!("name" in req.body))
+      return res.sendStatus(404);
     const result = await upsertTrainer(trainerName, req.body);
     res.status(result["$metadata"].httpStatusCode).send(result);
   } catch (err) {
@@ -67,7 +101,7 @@ router.post("/trainer/:trainerName", async (req, res, next) => {
 
 /** トレーナーの削除 */
 // TODO: トレーナーを削除する API エンドポイントの実装
-// ★delTrainerを呼ぶ
+// 
 router.delete("/trainer/:trainerName", async (req, res, next) => {
   try {
     const { trainerName } = req.params;
